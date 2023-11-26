@@ -16,7 +16,7 @@ def extract_features():
 
     for image_name in tqdm(os.listdir(images_dir)):
         image_path = os.path.join(images_dir, image_name)
-
+        image = preprocess(Image.open(image_path)).unsqueeze(0).to("cpu")
         with torch.no_grad():
             image_features = model.encode_image(image)
             features[image_name] = image_features.cpu().numpy().tolist()
@@ -32,4 +32,5 @@ def chech_feature_counts():
 
 
 if __name__ == "__main__":
+    extract_features()
     chech_feature_counts()

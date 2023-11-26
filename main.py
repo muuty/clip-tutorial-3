@@ -5,6 +5,9 @@ import torch
 import clip
 from PIL import Image
 import json
+import requests
+from io import BytesIO
+
 
 app = FastAPI()
 
@@ -31,7 +34,10 @@ def root():
 
 @app.get("/recommendation/image")
 def get_recommendation_from_image(url: str, k: int = 5):
-    image = preprocess(Image.open(url)).unsqueeze(0).to("cpu")
+    response = requests.get(url)
+    web_image = Image.open(BytesIO(response.content))
+
+    image = preprocess(web_image).unsqueeze(0).to("cpu")
 
     with torch.no_grad():
         image_features = model.encode_image(image)
@@ -40,7 +46,7 @@ def get_recommendation_from_image(url: str, k: int = 5):
 
 
 @app.get("/recommendation/text")
-def get_recommdnation_from_text(text: str, k: int = 5):
+def get_recommendation_from_text(text: str, k: int = 5):
     text = clip.tokenize(text).to(DEVICE)
 
     with torch.no_grad():
@@ -53,4 +59,4 @@ handler = Mangum(app, lifespan="off")
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="127.0.0.1", port=5000)
