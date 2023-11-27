@@ -6,7 +6,8 @@ This is a tutorial on how to use the open-ai clip with Fastapi.
 
 
 # 1. Install
-I recommend using a virtual environment.
+I recommend using a virtual environment. On the live session, I used pycharm to create a virtual environment.
+
 After creating and activating a virtual environment, run the following command to install the required packages.
 ```bash
 pip install -r requirements.txt
