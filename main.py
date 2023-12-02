@@ -13,9 +13,14 @@ app = FastAPI()
 
 MODEL_NAME = "ViT-B/32"
 DEVICE = "cpu"
-model, preprocess = clip.load(MODEL_NAME, device=DEVICE)
+model_cache = {}
 FEATURES = json.load(open("features.json", "r"))
 
+
+def _init_model():
+    model, preprocess = clip.load(MODEL_NAME, device=DEVICE, download_root="/tmp")
+    model_cache['model'] = model
+    model_cache['preprocess'] = preprocess
 
 def get_k_closest_images(input_feature, features: dict, k=5):
     distances = {}
@@ -34,8 +39,13 @@ def root():
 
 @app.get("/recommendation/image")
 def get_recommendation_from_image(url: str, k: int = 5):
+    if 'model' not in model_cache:
+        _init_model()
     response = requests.get(url)
     web_image = Image.open(BytesIO(response.content))
+
+    model = model_cache['model']
+    preprocess = model_cache['preprocess']
 
     image = preprocess(web_image).unsqueeze(0).to("cpu")
 
@@ -47,6 +57,11 @@ def get_recommendation_from_image(url: str, k: int = 5):
 
 @app.get("/recommendation/text")
 def get_recommendation_from_text(text: str, k: int = 5):
+    if 'model' not in model_cache:
+        _init_model()
+    model = model_cache['model']
+    preprocess = model_cache['preprocess']
+
     text = clip.tokenize(text).to(DEVICE)
 
     with torch.no_grad():
